@@ -6,7 +6,7 @@
 #include <QSet>
 #include <QVariant>
 #include <QMetaEnum>
-#include "MessageTypes.h" // Include the enum header file
+#include "MessageTypes.h"
 
 #define MESSAGE_BUS_INSTANCE (MessageBus::instance())
 
