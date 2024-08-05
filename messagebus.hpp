@@ -60,6 +60,27 @@ public:
         }
     }
 
+    template<typename Func>
+    void subscribe(const QString& messageTypeStr, QObject* receiver, Func slot)
+    {
+        MessageType messageType = stringToEnum(messageTypeStr);
+        if (messageType == MessageType()) {
+            qWarning() << "Error: Invalid message type string" << messageTypeStr;
+            return;
+        }
+        subscribe(messageType, receiver, slot);
+    }
+
+    void unsubscribe(const QString& messageTypeStr, QObject* receiver)
+    {
+        MessageType messageType = stringToEnum(messageTypeStr);
+        if (messageType == MessageType()) {
+            qWarning() << "Error: Invalid message type string" << messageTypeStr;
+            return;
+        }
+        unsubscribe(messageType, receiver);
+    }
+
     void publish(MessageType messageType, const QVariant& messageData)
     {
         emit messageReceived(messageType, messageData);
