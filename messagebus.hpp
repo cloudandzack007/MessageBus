@@ -38,7 +38,7 @@ public:
 
         auto connection = connect(this, &MessageBus::messageReceived, receiver, [=](int type, const QVariant& data) {
             if (type == messageType) {
-                (receiver->*slot)(data);
+                QMetaObject::invokeMethod(receiver, slot, Qt::QueuedConnection, Q_ARG(QVariant, data));
             }
         });
         // Store the connection
