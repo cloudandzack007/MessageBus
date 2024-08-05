@@ -5,9 +5,9 @@
 #include <QMap>
 #include <QSet>
 #include <QVariant>
-#include <QMetaObject>
+#include <QMetaEnum>
+#include "MessageTypes.h" // Include the enum header file
 
-#define MESSAGE_TYPE_EXAMPLE 1
 #define MESSAGE_BUS_INSTANCE (MessageBus::instance())
 
 class MessageBus : public QObject
@@ -21,9 +21,8 @@ public:
         return &instance;
     }
 
-    // Template method for connecting signals and slots
     template<typename Func>
-    void subscribe(int messageType, QObject* receiver, Func slot)
+    void subscribe(MessageType messageType, QObject* receiver, Func slot)
     {
         if (!receiver || !slot) {
             qWarning() << "Error: Invalid receiver or slot.";
@@ -32,20 +31,19 @@ public:
 
         // Check if the receiver is already subscribed to this message type
         if (connections[messageType].contains(receiver)) {
-            qWarning() << "Warning: Receiver is already subscribed to message type" << messageType;
+            qWarning() << "Warning: Receiver is already subscribed to message type" << QMetaEnum::fromType<MessageType>().valueToKeys(static_cast<int>(messageType));
             return;
         }
 
-        auto connection = connect(this, &MessageBus::messageReceived, receiver, [=](int type, const QVariant& data) {
+        auto connection = connect(this, &MessageBus::messageReceived, receiver, [=](MessageType type, const QVariant& data) {
             if (type == messageType) {
                 QMetaObject::invokeMethod(receiver, slot, Qt::QueuedConnection, Q_ARG(QVariant, data));
             }
         });
-        // Store the connection
         connections[messageType][receiver].insert(connection);
     }
 
-    void unsubscribe(int messageType, QObject* receiver)
+    void unsubscribe(MessageType messageType, QObject* receiver)
     {
         if (!receiver) {
             qWarning() << "Error: Invalid receiver.";
@@ -58,24 +56,35 @@ public:
             }
             connections[messageType].remove(receiver);
         } else {
-            qWarning() << "Warning: Receiver is not subscribed to message type" << messageType;
+            qWarning() << "Warning: Receiver is not subscribed to message type" << QMetaEnum::fromType<MessageType>().valueToKeys(static_cast<int>(messageType));
         }
     }
 
-    void publish(int messageType, const QVariant& messageData)
+    void publish(MessageType messageType, const QVariant& messageData)
     {
         emit messageReceived(messageType, messageData);
     }
 
+    static MessageType stringToEnum(const QString& typeStr)
+    {
+        QMetaEnum metaEnum = QMetaEnum::fromType<MessageType>();
+        return static_cast<MessageType>(metaEnum.keyToValue(typeStr.toUtf8().constData()));
+    }
+
+    static QString enumToString(MessageType type)
+    {
+        QMetaEnum metaEnum = QMetaEnum::fromType<MessageType>();
+        return QString(metaEnum.valueToKey(static_cast<int>(type)));
+    }
+
 signals:
-    void messageReceived(int messageType, const QVariant& messageData);
+    void messageReceived(MessageType messageType, const QVariant& messageData);
 
 private:
     MessageBus(QObject* parent = nullptr) : QObject(parent) {}
     Q_DISABLE_COPY(MessageBus)
 
-    // Map message type to a map of receivers and their connections
-    QMap<int, QMap<QObject*, QSet<QMetaObject::Connection>>> connections;
+    QMap<MessageType, QMap<QObject*, QSet<QMetaObject::Connection>>> connections;
 };
 
 #endif // MESSAGEBUS_H
