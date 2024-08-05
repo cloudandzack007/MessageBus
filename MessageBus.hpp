@@ -86,18 +86,6 @@ public:
         emit messageReceived(messageType, messageData);
     }
 
-    static MessageType stringToEnum(const QString& typeStr)
-    {
-        QMetaEnum metaEnum = QMetaEnum::fromType<MessageType>();
-        return static_cast<MessageType>(metaEnum.keyToValue(typeStr.toUtf8().constData()));
-    }
-
-    static QString enumToString(MessageType type)
-    {
-        QMetaEnum metaEnum = QMetaEnum::fromType<MessageType>();
-        return QString(metaEnum.valueToKey(static_cast<int>(type)));
-    }
-
 signals:
     void messageReceived(MessageType messageType, const QVariant& messageData);
 
@@ -105,6 +93,19 @@ private:
     MessageBus(QObject* parent = nullptr) : QObject(parent) {}
     Q_DISABLE_COPY(MessageBus)
 
+    MessageType stringToEnum(const QString& typeStr)
+    {
+        QMetaEnum metaEnum = QMetaEnum::fromType<MessageType>();
+        return static_cast<MessageType>(metaEnum.keyToValue(typeStr.toUtf8().constData()));
+    }
+
+    QString enumToString(MessageType type)
+    {
+        QMetaEnum metaEnum = QMetaEnum::fromType<MessageType>();
+        return QString(metaEnum.valueToKey(static_cast<int>(type)));
+    }
+
+private:
     QMap<MessageType, QMap<QObject*, QSet<QMetaObject::Connection>>> connections;
 };
 
