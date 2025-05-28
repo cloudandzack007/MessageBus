@@ -15,7 +15,7 @@ class MessageBus : public QObject
 public:
     static MessageBus* instance()
     {
-static QPointer<MessageBus> s_instance;
+        static QPointer<MessageBus> s_instance;
 
         if (s_instance.isNull())
         {
